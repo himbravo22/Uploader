@@ -1,0 +1,105 @@
+@model DF.BVS.CCP.Web.Models.UploadedDocumentViewModel
+
+@using (Html.BeginForm("Upload", "FileUpload", FormMethod.Post,
+    new
+    {
+        @enctype = "multipart/form-data",
+        @id = "ImgForm",
+        @name = "ImgForm",
+        @target = "UploadTarget"
+    }))
+{
+    <br />
+    <div class="input_fields_wrap">
+        <div> <input type="file" name="myfiles" id="fileUpload" /> </div>
+    </div>
+    <div style="padding:10px 0px 10px 0px; align-content:center">
+        <button type="button" class="add_field_button btn" style="font-size:12px;" id="btnAddMore">ADD MORE</button>
+        <input type="submit" class="btn" style="font-size:12px;" id="btnSubmit" value="UPLOAD" onclick="UploadImage()" />
+    </div>
+}
+
+<iframe id="UploadTarget" name="UploadTarget" onload="UploadImage_Complete();" style="position: absolute; left: -999em; top: -999em;"></iframe>
+<div id="div-Message-FileUpload">
+    <input type='hidden' id='FileUploadDialogMsg' value='Empty' />
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        var wrapper = $(".input_fields_wrap");
+        var add_button = $(".add_field_button");
+
+        $(add_button).on("click", function (e) {
+            e.preventDefault();
+            $(wrapper).prepend('<div><input type="file" multiple="multiple"  name="myfiles"/><a href="#" class="remove_field">Remove</a></div>');
+        });
+
+        $(wrapper).on("click", ".remove_field", function (e) {
+            e.preventDefault();
+            $(this).parent('div').remove();
+        });
+    });
+
+
+    var isFirstLoad = true;
+
+    function UploadImage() {
+        $("#ImgForm").submit();
+        isFirstLoad = false;
+    }
+
+    function UploadImage_Complete() {
+        //Check to see if this is the first load of the iFrame
+        if (isFirstLoad == true) {
+            isFirstLoad = false;
+            return;
+        }
+
+        //Reset the image form so the file won't get uploaded again
+        document.getElementById("ImgForm").reset();
+        //document.getElementById("#div-Message-FileUpload").reset();
+
+        //Grab the content of the textarea we named jsonResult .  This shold be loaded into
+        //the hidden iFrame.
+        var newImg = $.parseJSON($("#UploadTarget").contents().find("#jsonResult")[0].innerHTML);
+        //If there was an error, display it to the user
+        if (newImg.IsValid == false) {
+            $('#div-Message-FileUpload').html("");
+            $('#div-Message-FileUpload').html("<p style='color:Red'>" + newImg.Message + "</p>" + "<input type='hidden' id='FileUploadDialogMsg' value='Error'/>");
+
+            return;
+        }
+
+        //Create a new image and insert it into the Images div.  Just to be fancy,
+        //we're going to use a "FadeIn" effect from jQuery
+        if (newImg.IsValid == true) {
+            
+        }
+    }
+
+
+    $('#fileUpload').change(function () {
+        //var ext = this.value.match(/\.(.+)$/)[1];
+        var ext = this.value.split('.').pop();
+        switch (ext.toLowerCase()) {
+            case 'jpg':
+            case 'jpeg':
+            case 'pdf':
+            case 'doc':
+            case 'docx':
+            case 'png':
+                $('#div-Message-FileUpload').html("");
+                $('#btnSubmit').attr('disabled', false);
+                break;
+            default:
+                $('#div-Message-FileUpload').html("");
+                $('#div-Message-FileUpload').html('This is not an allowed file format type');
+                $('#div-Message-FileUpload').attr("style", "color:red");
+                //alert('This is not an allowed file type.');
+                this.value = '';
+        }
+    });
+</script>
+
+
